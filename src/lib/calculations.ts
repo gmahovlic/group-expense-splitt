@@ -1,6 +1,6 @@
-import { Balance, Person, Expense, Settlement } from './types'
+import { Balance, Person, Expense, Settlement, Transaction } from './types'
 
-export function calculateBalances(people: Person[], expenses: Expense[]): Balance[] {
+export function calculateBalances(people: Person[], expenses: Expense[], transactions: Transaction[] = []): Balance[] {
   const balances = new Map<string, number>()
   
   people.forEach(person => {
@@ -30,6 +30,11 @@ export function calculateBalances(people: Person[], expenses: Expense[]): Balanc
       balances.set(payer, (balances.get(payer) || 0) + expense.amount)
       balances.set(owedBy, (balances.get(owedBy) || 0) - expense.amount)
     }
+  })
+
+  transactions.forEach(transaction => {
+    balances.set(transaction.to, (balances.get(transaction.to) || 0) + transaction.amount)
+    balances.set(transaction.from, (balances.get(transaction.from) || 0) - transaction.amount)
   })
 
   return people.map(person => ({

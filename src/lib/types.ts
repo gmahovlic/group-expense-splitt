@@ -13,6 +13,15 @@ export interface Expense {
   timestamp: number
 }
 
+export interface Transaction {
+  id: string
+  from: string
+  to: string
+  amount: number
+  note?: string
+  timestamp: number
+}
+
 export interface Balance {
   personId: string
   name: string

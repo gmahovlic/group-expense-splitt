@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { useKV } from '@github/spark/hooks'
-import { Person, Expense } from '@/lib/types'
+import { Person, Expense, Transaction } from '@/lib/types'
 import { calculateBalances, calculateSettlements } from '@/lib/calculations'
 import { AddPersonDialog } from '@/components/AddPersonDialog'
 import { AddExpenseDialog } from '@/components/AddExpenseDialog'
+import { AddTransactionDialog } from '@/components/AddTransactionDialog'
 import { EditPersonDialog } from '@/components/EditPersonDialog'
 import { DeletePersonDialog } from '@/components/DeletePersonDialog'
 import { BalanceCard } from '@/components/BalanceCard'
@@ -17,6 +18,7 @@ import { Users, Receipt } from '@phosphor-icons/react'
 function App() {
   const [people, setPeople] = useKV<Person[]>('expense-people', [])
   const [expenses, setExpenses] = useKV<Expense[]>('expense-list', [])
+  const [transactions, setTransactions] = useKV<Transaction[]>('transactions-list', [])
   const [isLoaded, setIsLoaded] = useState(false)
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -29,6 +31,7 @@ function App() {
 
   const safePeople = people ?? []
   const safeExpenses = expenses ?? []
+  const safeTransactions = transactions ?? []
 
   const handleAddPerson = useCallback((name: string) => {
     const newPerson: Person = {
@@ -69,10 +72,15 @@ function App() {
           e.paidBy !== personIdToDelete && e.owedBy !== personIdToDelete
         )
       )
+      setTransactions((current) => 
+        (current ?? []).filter(t => 
+          t.from !== personIdToDelete && t.to !== personIdToDelete
+        )
+      )
       toast.success(`${personNameToDelete} removed from the group`)
       setSelectedPerson(null)
     }
-  }, [selectedPerson, setPeople, setExpenses])
+  }, [selectedPerson, setPeople, setExpenses, setTransactions])
 
   const handleAddExpense = useCallback((
     description: string,
@@ -99,7 +107,22 @@ function App() {
     toast.success('Expense deleted')
   }, [setExpenses])
 
-  const balances = useMemo(() => calculateBalances(safePeople, safeExpenses), [safePeople, safeExpenses])
+  const handleAddTransaction = useCallback((from: string, to: string, amount: number, note?: string) => {
+    const newTransaction: Transaction = {
+      id: `transaction-${Date.now()}`,
+      from,
+      to,
+      amount,
+      note,
+      timestamp: Date.now()
+    }
+    setTransactions((current) => [...(current ?? []), newTransaction])
+    const fromPerson = safePeople.find(p => p.id === from)
+    const toPerson = safePeople.find(p => p.id === to)
+    toast.success(`Payment recorded: ${fromPerson?.name} → ${toPerson?.name}`)
+  }, [setTransactions, safePeople])
+
+  const balances = useMemo(() => calculateBalances(safePeople, safeExpenses, safeTransactions), [safePeople, safeExpenses, safeTransactions])
   const settlements = useMemo(() => calculateSettlements(balances), [balances])
 
   return (
@@ -142,6 +165,7 @@ function App() {
                   <div className="flex gap-2 flex-wrap">
                     <AddPersonDialog onAddPerson={handleAddPerson} />
                     <AddExpenseDialog people={safePeople} onAddExpense={handleAddExpense} />
+                    <AddTransactionDialog people={safePeople} onAddTransaction={handleAddTransaction} />
                   </div>
                 </div>
 
