@@ -33,8 +33,8 @@ export function calculateBalances(people: Person[], expenses: Expense[], transac
   })
 
   transactions.forEach(transaction => {
-    balances.set(transaction.to, (balances.get(transaction.to) || 0) + transaction.amount)
-    balances.set(transaction.from, (balances.get(transaction.from) || 0) - transaction.amount)
+    balances.set(transaction.from, (balances.get(transaction.from) || 0) + transaction.amount)
+    balances.set(transaction.to, (balances.get(transaction.to) || 0) - transaction.amount)
   })
 
   return people.map(person => ({

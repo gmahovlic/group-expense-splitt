@@ -114,6 +114,11 @@ function App() {
     toast.success('Expense deleted')
   }, [setExpenses])
 
+  const handleDeleteTransaction = useCallback((transactionId: string) => {
+    setTransactions((current) => (current ?? []).filter(t => t.id !== transactionId))
+    toast.success('Transaction deleted')
+  }, [setTransactions])
+
   const handleAddTransaction = useCallback((from: string, to: string, amount: number, note?: string) => {
     const newTransaction: Transaction = {
       id: `transaction-${Date.now()}`,
@@ -155,6 +160,8 @@ function App() {
         expenses={safeExpenses}
         transactions={safeTransactions}
         people={safePeople}
+        onDeleteExpense={handleDeleteExpense}
+        onDeleteTransaction={handleDeleteTransaction}
       />
       <div className="min-h-screen bg-background">
         <div className="mx-auto px-4 py-4 sm:py-8 max-w-7xl">
@@ -229,8 +236,10 @@ function App() {
                 <Separator className="mb-4" />
                 <ExpenseHistory
                   expenses={safeExpenses}
+                  transactions={safeTransactions}
                   people={safePeople}
                   onDeleteExpense={handleDeleteExpense}
+                  onDeleteTransaction={handleDeleteTransaction}
                 />
               </Card>
             </div>

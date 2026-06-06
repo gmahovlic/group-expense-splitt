@@ -9,7 +9,8 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { ArrowRight, Receipt, CurrencyDollar } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
+import { ArrowRight, Receipt, CurrencyDollar, Trash } from '@phosphor-icons/react'
 import { format } from 'date-fns'
 
 interface PersonHistoryDialogProps {
@@ -19,6 +20,8 @@ interface PersonHistoryDialogProps {
   expenses: Expense[]
   transactions: Transaction[]
   people: Person[]
+  onDeleteExpense: (expenseId: string) => void
+  onDeleteTransaction: (transactionId: string) => void
 }
 
 export function PersonHistoryDialog({
@@ -27,7 +30,9 @@ export function PersonHistoryDialog({
   person,
   expenses,
   transactions,
-  people
+  people,
+  onDeleteExpense,
+  onDeleteTransaction
 }: PersonHistoryDialogProps) {
   if (!person) return null
 
@@ -121,9 +126,19 @@ export function PersonHistoryDialog({
                             </p>
                           </div>
                         </div>
-                        <Badge variant={item.data.type === 'shared' ? 'secondary' : 'outline'} className="flex-shrink-0">
-                          {item.data.type === 'shared' ? 'Shared' : 'Individual'}
-                        </Badge>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge variant={item.data.type === 'shared' ? 'secondary' : 'outline'}>
+                            {item.data.type === 'shared' ? 'Shared' : 'Individual'}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => onDeleteExpense(item.data.id)}
+                          >
+                            <Trash weight="bold" size={16} />
+                          </Button>
+                        </div>
                       </div>
                       <div className="ml-6 space-y-1">
                         {item.data.paidBy === person.id && (
@@ -152,18 +167,28 @@ export function PersonHistoryDialog({
 
                   {item.type === 'transaction' && (
                     <div>
-                      <div className="flex items-start gap-2 mb-2">
-                        <CurrencyDollar weight="fill" className="text-accent mt-0.5 flex-shrink-0" size={18} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium">{getPersonName(item.data.from)}</span>
-                            <ArrowRight size={16} className="text-muted-foreground flex-shrink-0" />
-                            <span className="font-medium">{getPersonName(item.data.to)}</span>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                          <CurrencyDollar weight="fill" className="text-accent mt-0.5 flex-shrink-0" size={18} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium">{getPersonName(item.data.from)}</span>
+                              <ArrowRight size={16} className="text-muted-foreground flex-shrink-0" />
+                              <span className="font-medium">{getPersonName(item.data.to)}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {format(new Date(item.timestamp), 'MMM d, yyyy • h:mm a')}
+                            </p>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {format(new Date(item.timestamp), 'MMM d, yyyy • h:mm a')}
-                          </p>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => onDeleteTransaction(item.data.id)}
+                        >
+                          <Trash weight="bold" size={16} />
+                        </Button>
                       </div>
                       <div className="ml-6 space-y-1">
                         <p className={`text-sm font-medium ${item.data.from === person.id ? 'text-destructive' : 'text-positive'}`}>
