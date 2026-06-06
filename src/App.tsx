@@ -1,9 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Person, Expense } from '@/lib/types'
 import { calculateBalances, calculateSettlements } from '@/lib/calculations'
 import { AddPersonDialog } from '@/components/AddPersonDialog'
 import { AddExpenseDialog } from '@/components/AddExpenseDialog'
+import { EditPersonDialog } from '@/components/EditPersonDialog'
+import { DeletePersonDialog } from '@/components/DeletePersonDialog'
 import { BalanceCard } from '@/components/BalanceCard'
 import { SettlementsList } from '@/components/SettlementsList'
 import { ExpenseHistory } from '@/components/ExpenseHistory'
@@ -16,6 +18,10 @@ function App() {
   const [people, setPeople] = useKV<Person[]>('expense-people', [])
   const [expenses, setExpenses] = useKV<Expense[]>('expense-list', [])
 
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedPerson, setSelectedPerson] = useState<{ id: string; name: string } | null>(null)
+
   const safePeople = people || []
   const safeExpenses = expenses || []
 
@@ -26,6 +32,38 @@ function App() {
     }
     setPeople((current) => [...(current || []), newPerson])
     toast.success(`${name} added to the group`)
+  }
+
+  const handleEditPerson = (personId: string, name: string) => {
+    setSelectedPerson({ id: personId, name })
+    setEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = (personId: string, newName: string) => {
+    setPeople((current) => 
+      (current || []).map(p => 
+        p.id === personId ? { ...p, name: newName } : p
+      )
+    )
+    toast.success('Person updated successfully')
+  }
+
+  const handleDeletePerson = (personId: string, name: string) => {
+    setSelectedPerson({ id: personId, name })
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    if (selectedPerson) {
+      setPeople((current) => (current || []).filter(p => p.id !== selectedPerson.id))
+      setExpenses((current) => 
+        (current || []).filter(e => 
+          e.paidBy !== selectedPerson.id && e.owedBy !== selectedPerson.id
+        )
+      )
+      toast.success(`${selectedPerson.name} removed from the group`)
+      setSelectedPerson(null)
+    }
   }
 
   const handleAddExpense = (
@@ -59,28 +97,41 @@ function App() {
   return (
     <>
       <Toaster position="top-center" richColors />
+      <EditPersonDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        personId={selectedPerson?.id || ''}
+        currentName={selectedPerson?.name || ''}
+        onEdit={handleSaveEdit}
+      />
+      <DeletePersonDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        personName={selectedPerson?.name || ''}
+        onConfirm={handleConfirmDelete}
+      />
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <header className="mb-8">
-            <h1 className="text-4xl font-bold tracking-tight mb-2 font-[family-name:var(--font-space-grotesk)]">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
+          <header className="mb-6 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2 font-[family-name:var(--font-space-grotesk)]">
               SplitWise
             </h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-base sm:text-lg">
               Fair expense splitting made simple
             </p>
           </header>
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-6">
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+              <Card className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
                   <div className="flex items-center gap-2">
-                    <Users weight="fill" size={24} className="text-primary" />
-                    <h2 className="text-2xl font-semibold font-[family-name:var(--font-space-grotesk)]">
+                    <Users weight="fill" size={24} className="text-primary flex-shrink-0" />
+                    <h2 className="text-xl sm:text-2xl font-semibold font-[family-name:var(--font-space-grotesk)]">
                       Group Members
                     </h2>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <AddPersonDialog onAddPerson={handleAddPerson} />
                     <AddExpenseDialog people={safePeople} onAddExpense={handleAddExpense} />
                   </div>
@@ -93,18 +144,24 @@ function App() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-3">
                     {balances.map((balance, index) => (
-                      <BalanceCard key={balance.personId} balance={balance} index={index} />
+                      <BalanceCard 
+                        key={balance.personId} 
+                        balance={balance} 
+                        index={index}
+                        onEdit={handleEditPerson}
+                        onDelete={handleDeletePerson}
+                      />
                     ))}
                   </div>
                 )}
               </Card>
 
-              <Card className="p-6">
+              <Card className="p-4 sm:p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Receipt weight="fill" size={24} className="text-primary" />
-                  <h2 className="text-2xl font-semibold font-[family-name:var(--font-space-grotesk)]">
+                  <Receipt weight="fill" size={24} className="text-primary flex-shrink-0" />
+                  <h2 className="text-xl sm:text-2xl font-semibold font-[family-name:var(--font-space-grotesk)]">
                     Settlement Plan
                   </h2>
                 </div>
@@ -117,8 +174,8 @@ function App() {
             </div>
 
             <div className="lg:col-span-1">
-              <Card className="p-6 sticky top-4">
-                <h2 className="text-2xl font-semibold mb-4 font-[family-name:var(--font-space-grotesk)]">
+              <Card className="p-4 sm:p-6 lg:sticky lg:top-4">
+                <h2 className="text-xl sm:text-2xl font-semibold mb-4 font-[family-name:var(--font-space-grotesk)]">
                   Expense History
                 </h2>
                 <Separator className="mb-4" />

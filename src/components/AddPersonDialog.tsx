@@ -58,11 +58,11 @@ export function AddPersonDialog({ onAddPerson }: AddPersonDialogProps) {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim()}>
+            <Button type="submit" disabled={!name.trim()} className="w-full sm:w-auto">
               Add Person
             </Button>
           </DialogFooter>
