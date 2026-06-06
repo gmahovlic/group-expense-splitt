@@ -10,9 +10,10 @@ interface BalanceCardProps {
   index: number
   onEdit: (personId: string, name: string) => void
   onDelete: (personId: string, name: string) => void
+  onClick: (personId: string, name: string) => void
 }
 
-export function BalanceCard({ balance, index, onEdit, onDelete }: BalanceCardProps) {
+export function BalanceCard({ balance, index, onEdit, onDelete, onClick }: BalanceCardProps) {
   const getBalanceColor = (bal: number) => {
     if (Math.abs(bal) < 0.01) return 'text-muted-foreground'
     return bal > 0 ? 'text-positive' : 'text-destructive'
@@ -29,7 +30,7 @@ export function BalanceCard({ balance, index, onEdit, onDelete }: BalanceCardPro
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
     >
-      <Card className="p-4 hover:shadow-md transition-shadow">
+      <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => onClick(balance.personId, balance.name)}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -52,7 +53,10 @@ export function BalanceCard({ balance, index, onEdit, onDelete }: BalanceCardPro
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => onEdit(balance.personId, balance.name)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit(balance.personId, balance.name)
+              }}
             >
               <PencilSimple className="text-primary" />
             </Button>
@@ -60,7 +64,10 @@ export function BalanceCard({ balance, index, onEdit, onDelete }: BalanceCardPro
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => onDelete(balance.personId, balance.name)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(balance.personId, balance.name)
+              }}
             >
               <Trash className="text-destructive" />
             </Button>

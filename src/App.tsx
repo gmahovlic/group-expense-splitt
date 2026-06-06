@@ -7,6 +7,7 @@ import { AddExpenseDialog } from '@/components/AddExpenseDialog'
 import { AddTransactionDialog } from '@/components/AddTransactionDialog'
 import { EditPersonDialog } from '@/components/EditPersonDialog'
 import { DeletePersonDialog } from '@/components/DeletePersonDialog'
+import { PersonHistoryDialog } from '@/components/PersonHistoryDialog'
 import { BalanceCard } from '@/components/BalanceCard'
 import { SettlementsList } from '@/components/SettlementsList'
 import { ExpenseHistory } from '@/components/ExpenseHistory'
@@ -23,6 +24,7 @@ function App() {
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
   const [selectedPerson, setSelectedPerson] = useState<{ id: string; name: string } | null>(null)
 
   useEffect(() => {
@@ -81,6 +83,11 @@ function App() {
       setSelectedPerson(null)
     }
   }, [selectedPerson, setPeople, setExpenses, setTransactions])
+
+  const handleViewHistory = useCallback((personId: string, name: string) => {
+    setSelectedPerson({ id: personId, name })
+    setHistoryDialogOpen(true)
+  }, [])
 
   const handleAddExpense = useCallback((
     description: string,
@@ -141,6 +148,14 @@ function App() {
         personName={selectedPerson?.name || ''}
         onConfirm={handleConfirmDelete}
       />
+      <PersonHistoryDialog
+        open={historyDialogOpen}
+        onOpenChange={setHistoryDialogOpen}
+        person={selectedPerson ? { id: selectedPerson.id, name: selectedPerson.name } : null}
+        expenses={safeExpenses}
+        transactions={safeTransactions}
+        people={safePeople}
+      />
       <div className="min-h-screen bg-background">
         <div className="mx-auto px-4 py-4 sm:py-8 max-w-7xl">
           <header className="mb-6 sm:mb-8">
@@ -184,6 +199,7 @@ function App() {
                         index={index}
                         onEdit={handleEditPerson}
                         onDelete={handleDeletePerson}
+                        onClick={handleViewHistory}
                       />
                     ))}
                   </div>
