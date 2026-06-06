@@ -31,9 +31,9 @@ export function ExpenseHistory({ expenses, people, onDeleteExpense }: ExpenseHis
   }
 
   return (
-    <ScrollArea className="h-[400px] pr-4">
+    <ScrollArea className="h-[400px]">
       <AnimatePresence mode="popLayout">
-        <div className="space-y-2">
+        <div className="space-y-2 pr-4">
           {sortedExpenses.map((expense) => (
             <motion.div
               key={expense.id}
