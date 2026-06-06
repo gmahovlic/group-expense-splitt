@@ -64,8 +64,8 @@ export function AddTransactionDialog({ people, onAddTransaction }: AddTransactio
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" disabled={people.length < 2}>
-          <ArrowsLeftRight weight="bold" />
-          Add Payment
+          <ArrowsLeftRight weight="bold" className="sm:mr-2" />
+          <span className="hidden sm:inline">Add Payment</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
