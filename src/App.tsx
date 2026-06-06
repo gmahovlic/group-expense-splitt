@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Person, Expense } from '@/lib/types'
 import { calculateBalances, calculateSettlements } from '@/lib/calculations'
@@ -17,56 +17,64 @@ import { Users, Receipt } from '@phosphor-icons/react'
 function App() {
   const [people, setPeople] = useKV<Person[]>('expense-people', [])
   const [expenses, setExpenses] = useKV<Expense[]>('expense-list', [])
+  const [isLoaded, setIsLoaded] = useState(false)
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedPerson, setSelectedPerson] = useState<{ id: string; name: string } | null>(null)
 
-  const safePeople = people || []
-  const safeExpenses = expenses || []
+  useEffect(() => {
+    setIsLoaded(true)
+  }, [])
 
-  const handleAddPerson = (name: string) => {
+  const safePeople = people ?? []
+  const safeExpenses = expenses ?? []
+
+  const handleAddPerson = useCallback((name: string) => {
     const newPerson: Person = {
       id: `person-${Date.now()}`,
       name
     }
-    setPeople((current) => [...(current || []), newPerson])
+    setPeople((current) => [...(current ?? []), newPerson])
     toast.success(`${name} added to the group`)
-  }
+  }, [setPeople])
 
-  const handleEditPerson = (personId: string, name: string) => {
+  const handleEditPerson = useCallback((personId: string, name: string) => {
     setSelectedPerson({ id: personId, name })
     setEditDialogOpen(true)
-  }
+  }, [])
 
-  const handleSaveEdit = (personId: string, newName: string) => {
+  const handleSaveEdit = useCallback((personId: string, newName: string) => {
     setPeople((current) => 
-      (current || []).map(p => 
+      (current ?? []).map(p => 
         p.id === personId ? { ...p, name: newName } : p
       )
     )
     toast.success('Person updated successfully')
-  }
+  }, [setPeople])
 
-  const handleDeletePerson = (personId: string, name: string) => {
+  const handleDeletePerson = useCallback((personId: string, name: string) => {
     setSelectedPerson({ id: personId, name })
     setDeleteDialogOpen(true)
-  }
+  }, [])
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (selectedPerson) {
-      setPeople((current) => (current || []).filter(p => p.id !== selectedPerson.id))
+      const personIdToDelete = selectedPerson.id
+      const personNameToDelete = selectedPerson.name
+      
+      setPeople((current) => (current ?? []).filter(p => p.id !== personIdToDelete))
       setExpenses((current) => 
-        (current || []).filter(e => 
-          e.paidBy !== selectedPerson.id && e.owedBy !== selectedPerson.id
+        (current ?? []).filter(e => 
+          e.paidBy !== personIdToDelete && e.owedBy !== personIdToDelete
         )
       )
-      toast.success(`${selectedPerson.name} removed from the group`)
+      toast.success(`${personNameToDelete} removed from the group`)
       setSelectedPerson(null)
     }
-  }
+  }, [selectedPerson, setPeople, setExpenses])
 
-  const handleAddExpense = (
+  const handleAddExpense = useCallback((
     description: string,
     amount: number,
     paidBy: string,
@@ -82,14 +90,14 @@ function App() {
       owedBy,
       timestamp: Date.now()
     }
-    setExpenses((current) => [...(current || []), newExpense])
+    setExpenses((current) => [...(current ?? []), newExpense])
     toast.success('Expense added successfully')
-  }
+  }, [setExpenses])
 
-  const handleDeleteExpense = (expenseId: string) => {
-    setExpenses((current) => (current || []).filter(e => e.id !== expenseId))
+  const handleDeleteExpense = useCallback((expenseId: string) => {
+    setExpenses((current) => (current ?? []).filter(e => e.id !== expenseId))
     toast.success('Expense deleted')
-  }
+  }, [setExpenses])
 
   const balances = useMemo(() => calculateBalances(safePeople, safeExpenses), [safePeople, safeExpenses])
   const settlements = useMemo(() => calculateSettlements(balances), [balances])
