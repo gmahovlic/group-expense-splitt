@@ -111,7 +111,7 @@ function App() {
         onConfirm={handleConfirmDelete}
       />
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
+        <div className="mx-auto px-4 py-4 sm:py-8 max-w-7xl">
           <header className="mb-6 sm:mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2 font-[family-name:var(--font-space-grotesk)]">
               SplitWise
